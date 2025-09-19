@@ -2,7 +2,7 @@
 
 ![Dipping Bird](dippingbird.gif)
 
-Fully-automated* coding for Aider (currently couched with asterisks)
+Fully-automated* coding for OpenAI Codex CLI (currently couched with asterisks)
 
 - All entry is done in the background, you can keep your mouse and keyboard to yourself.
 - Assumes Windows environment for now (Win 10 pro tested)
@@ -51,7 +51,7 @@ Then in a separate terminal, run:
 ```
 python dippingbird.py
 ```
-Though you'll likely have to adjust APP_TITLE to match your current aider session title.
+Though you'll likely have to adjust APP_TITLE to match your current OpenAI Codex CLI session title.
 
 
 ## Admin Command Prompt auto-confirm (send "y")
