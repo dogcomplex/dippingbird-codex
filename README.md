@@ -4,10 +4,10 @@
 
 Fully-automated* coding for OpenAI Codex CLI (currently couched with asterisks)
 
+- Literally just sends "y" to a terminal of your choice, looking for 60s of inactivity (or use --persistent to just have it send blindly)
 - All entry is done in the background, you can keep your mouse and keyboard to yourself.
 - Assumes Windows environment for now (Win 10 pro tested)
-- Claude-3.5-sonnet recommended, only one that stays consistent long enough
-  - but Aider supports local models too
+- Ideal for OpenAI Codex CLI, but should work with Aider and others.  Just tailored this repo blindly
 - USE AT YOUR OWN RISK
 
 ```
