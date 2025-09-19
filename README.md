@@ -54,6 +54,63 @@ python dippingbird.py
 Though you'll likely have to adjust APP_TITLE to match your current aider session title.
 
 
+## Admin Command Prompt auto-confirm (send "y")
+
+This script can target an elevated Command Prompt window and periodically send a "y" followed by Enter. Detection was hardened:
+
+- Prefers exact title matches, otherwise falls back to heuristics for elevated CMD (`ConsoleWindowClass`, titles starting with `Administrator:` and containing `Command Prompt`/`cmd`).
+- Uses both `win32` and `uia` backends to find the window.
+- Optionally tries to detect confirmation prompts via UI Automation before sending.
+
+Environment variables you can set in the same CMD before running `python dippingbird.py`:
+
+- `APP_TITLE`: Exact title prefix to match. Default: `Administrator: Command Prompt`.
+- `APP_TITLE_CONTAINS`: Alternate substring to match in the title if not using `APP_TITLE`.
+- `ALWAYS_SEND_Y`: If `true`, always sends `y` every interval. If `false`, attempt to detect Y/N prompts first. Default: `true`.
+- `RUN_EVERY`: Interval in seconds between attempts. Default: `3`.
+- `DISABLE_GIF`: If `true`, disables the GIF window. Default: `false`.
+- `PERSISTENT`: If `true`, always sends based on base condition every interval (ignores staleness). Default: `false`.
+- `STALE_SECONDS`: Consider the window stale after this many seconds of no text change via UIA snapshot; will send when stale unless `PERSISTENT=true`. Default: `60`.
+- `REEVALUATION_ENABLED`: If `true`, occasionally sends a re-evaluation line instead of 'y'. Default: `false`.
+
+Examples (Windows CMD):
+
+```
+set APP_TITLE=Administrator: Command Prompt
+set ALWAYS_SEND_Y=true
+set RUN_EVERY=2
+set REEVALUATION_ENABLED=true
+python dippingbird.py
+```
+
+If you prefer conditional sending only when a prompt is detected:
+
+```
+set ALWAYS_SEND_Y=false
+python dippingbird.py
+
+Interactive selection and persistent mode:
+
+```
+python dippingbird.py --select
+set PERSISTENT=true
+python dippingbird.py
+```
+
+Minimal send behavior (default):
+
+- Sends one initial 'y' immediately on start.
+- Sends one 'y' after `STALE_SECONDS` of inactivity (resets when the console text changes).
+- Does not repeat 'y' while the window remains stale; waits for change then re-arms.
+```
+
+If detection struggles, run the helper to list likely windows:
+
+```
+python dippingbird.py --help
+```
+
+
 # TODO
 
 - [ ] get it to recursively define new module folders with their own fractal repeat of this template, so each module can be worked on independently and fit context restrictions (these do way better on smaller projects)
