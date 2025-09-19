@@ -4,7 +4,7 @@
 
 Fully-automated* coding for OpenAI Codex CLI (currently couched with asterisks)
 
-- Literally just sends "y" to a terminal of your choice, looking for 60s of inactivity (or use --persistent to just have it send blindly)
+- Literally just sends "y" to a terminal of your choice, looking for 30s of inactivity (or use --persistent to just have it send blindly)
 - All entry is done in the background, you can keep your mouse and keyboard to yourself.
 - Assumes Windows environment for now (Win 10 pro tested)
 - Ideal for OpenAI Codex CLI, but should work with Aider and others.  Just tailored this repo blindly
@@ -70,8 +70,9 @@ Environment variables you can set in the same CMD before running `python dipping
 - `RUN_EVERY`: Interval in seconds between attempts. Default: `3`.
 - `DISABLE_GIF`: If `true`, disables the GIF window. Default: `false`.
 - `PERSISTENT`: If `true`, always sends based on base condition every interval (ignores staleness). Default: `false`.
-- `STALE_SECONDS`: Consider the window stale after this many seconds of no text change via UIA snapshot; will send when stale unless `PERSISTENT=true`. Default: `60`.
+- `STALE_SECONDS`: Consider the window stale after this many seconds of no text change via UIA snapshot; will send when stale unless `PERSISTENT=true`. Default: `30`.
 - `REEVALUATION_ENABLED`: If `true`, occasionally sends a re-evaluation line instead of 'y'. Default: `false`.
+- `MIN_SEND_MINUTES`: If > 0, ensure at least one 'y' every N minutes since last send (does not spam; coexists with stale/persistent logic). Default: `0` (disabled).
 
 Examples (Windows CMD):
 
@@ -95,6 +96,17 @@ Interactive selection and persistent mode:
 python dippingbird.py --select
 set PERSISTENT=true
 python dippingbird.py
+```
+
+Minimum send interval:
+
+```
+set MIN_SEND_MINUTES=5
+python dippingbird.py
+```
+or via CLI:
+```
+python dippingbird.py --min-send=5
 ```
 
 Minimal send behavior (default):

@@ -31,8 +31,10 @@ ALWAYS_SEND_Y = _get_env_bool("ALWAYS_SEND_Y", True)
 RUN_EVERY = _get_env_int("RUN_EVERY", 3)  # seconds
 TARGET_HANDLE_ENV = os.environ.get("TARGET_HANDLE")
 PERSISTENT = _get_env_bool("PERSISTENT", False)
-STALE_SECONDS = _get_env_int("STALE_SECONDS", 60)
+STALE_SECONDS = _get_env_int("STALE_SECONDS", 30)
 REEVALUATION_ENABLED = _get_env_bool("REEVALUATION_ENABLED", False)
+MIN_SEND_MINUTES = _get_env_int("MIN_SEND_MINUTES", 0)
+MIN_SEND_SECONDS = max(0, MIN_SEND_MINUTES * 60)
 
 REEVALUATION_MESSAGE = "Let's take a step back and re-evaluate if what we're doing makes sense. We might be getting in a loop here. Let's do something a little more out of left field instead."
 REEVALUATION_CHANCE = 0.1
@@ -367,6 +369,7 @@ def send_keys_if_match():
     last_check = -interval
     last_snapshot_hash = None
     last_change_ts = time.time()
+    last_sent_ts = None
     initial_sent = False
     sent_during_current_stale = False
     while not should_exit and not stop_event.is_set():
@@ -402,6 +405,7 @@ def send_keys_if_match():
                     else:
                         window.send_keystrokes("y{ENTER}")
                         print(f"{rounded_time}  sent 'y' (initial)")
+                        last_sent_ts = time.time()
                     initial_sent = True
                     last_check = rounded_time
                     continue
@@ -415,6 +419,11 @@ def send_keys_if_match():
                     if is_stale and not sent_during_current_stale:
                         should_send = True
 
+                # 3) Minimum send guard: if set, send when elapsed >= MIN_SEND_SECONDS since last 'y'
+                if not should_send and MIN_SEND_SECONDS > 0:
+                    if last_sent_ts is None or (time.time() - last_sent_ts) >= MIN_SEND_SECONDS:
+                        should_send = True
+
                 if should_send:
                     if REEVALUATION_ENABLED and (random.random() < REEVALUATION_CHANCE):
                         window.send_keystrokes(REEVALUATION_MESSAGE + "{ENTER}")
@@ -426,6 +435,7 @@ def send_keys_if_match():
                         else:
                             sent_during_current_stale = True
                             print(f"{rounded_time}  sent 'y' (stale for ~{int(stale_secs)}s)")
+                        last_sent_ts = time.time()
                 else:
                     reason = "active < stale threshold" if not PERSISTENT else "cond false"
                     print(f"{rounded_time}  skipping send ({reason})")
@@ -530,11 +540,11 @@ def _apply_cli_overrides(argv):
     global REEVALUATION_ENABLED, PERSISTENT, STALE_SECONDS, RUN_EVERY, ALWAYS_SEND_Y
     global APP_TITLE, APP_TITLE_CONTAINS, SELECTED_HANDLE, TARGET_HANDLE_ENV
     # Recognized forms:
-    # --no-reeval, --persistent, --stale=60, --interval=3, --always[=true|false]
+    # --reeval, --persistent, --stale=60, --interval=3, --always[=true|false]
     # --title=... --contains=... --handle=0x1234
     for arg in argv:
-        if arg == "--no-reeval":
-            REEVALUATION_ENABLED = False
+        if arg == "--reeval":
+            REEVALUATION_ENABLED = True
         elif arg == "--persistent":
             PERSISTENT = True
         elif arg.startswith("--stale="):
@@ -545,6 +555,13 @@ def _apply_cli_overrides(argv):
         elif arg.startswith("--interval="):
             try:
                 RUN_EVERY = int(arg.split("=", 1)[1])
+            except Exception:
+                pass
+        elif arg.startswith("--min-send="):
+            try:
+                mins = int(arg.split("=", 1)[1])
+                globals()["MIN_SEND_MINUTES"] = mins
+                globals()["MIN_SEND_SECONDS"] = max(0, mins * 60)
             except Exception:
                 pass
         elif arg == "--always":
